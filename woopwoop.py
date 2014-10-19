@@ -13,35 +13,39 @@ def soundIn(f):
     data = inwav[1][:,0]        # Extract data list.
     return data, samprate
 
-def binarify(arr):
+def binarify(mat):
     """performs fft, sort frequency into numbered LEDs, and converts to binary"""
     thresh = 1000
     freqs = [10,20,30,50,70,100,150,200,300,400,600,900,1200,2000,3000,5000]
 
     #perform descrete fourier transform
-    fdata = rfft(arr).tolist()
-    histo = zeros(len(freqs),1)
-    AA, BB = 0, 0
+    fdata = rfft(mat)
+    histo = zeros((len(fdata),len(freqs)))
+    binaryData = zeros((len(histo), 2))
 
-    #form 16 element array
-    freqOld = 0
-    for i in xrange(len(freqs)):
-        freqNew = freqs[i]
-        histo[i] = sum(fdata[freqOld:freqNew])
-        freqOld = freqNew
+    for i in xrange(len(fdata)):
+        row = fdata[i]
+        freqOld = 0
+        for j in xrange(len(freqs)):
+            freqNew = freqs[j]
+            histo[i,j] = sum(row[freqOld:freqNew])
+            freqOld = freqNew
 
     #rearrange LED order now
     #create AA and BB in decimal using binary operations
-    for i in range(8):
-        if histo[i] > thresh:
-            AA += 2**i
-        if histo[i+8] > thresh:
-            BB += 2**i
 
-    return bin(AA), bin(BB)
+    for i in xrange(len(histo)):
+        for j in xrange(8):
+            if histo[i,j] > thresh:
+                binaryData[i,0] += 2**j
+            if histo[i,j+8] > thresh:
+                binaryData[i,1] += 2**j
+
+    return [[str(bin(int(j)))[2:].zfill(8) for j in i] for i in binaryData]
 
 #extract
 try:
+    #wdata is a 1D array of amplitudes
     wdata, samprate = soundIn(FILENAME)
 
     #delay in LED
@@ -54,9 +58,7 @@ try:
     w3data = reshape(w2data, (len(w2data)/delay, delay))
 
     #creates the array for Arduino
-    arrLED = zeros(len(w3data), i)
-    for i in xrange(len(w3data)):
-        arrLED[i] = binarify(w3(data))
+    print binarify(w3data)
 
 except IOError:
     raise IOError("File '%s' not found!" %FILENAME)
