@@ -1,7 +1,14 @@
-import serial
+import serial, time
 ser = serial.Serial('/dev/ttyACM0', 9600)
+FILENAME = 'DATA.txt'
 
-# temp data.
-ser.write('01101101,11111111,543')	
+try:
+	f = open(FILENAME)
+	for line in f.readlines():
+		ser.write(line.strip())
+		time.sleep(0.250)
 
-ser.close()
+	ser.close()
+	
+except IOError:
+	raise IOError("File '%s' not found!" %FILENAME)

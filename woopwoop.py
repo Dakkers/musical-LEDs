@@ -56,9 +56,13 @@ try:
       
     #reshapes to 2D array
     w3data = reshape(w2data, (len(w2data)/delay, delay))
+    w3data = binarify(w3data)
 
-    #creates the array for Arduino
-    print binarify(w3data)
+    f = open('DATA.txt', 'w')
+    for row in w3data:
+        f.write(','.join(row) + ',250\n')
+    f.close()
+
 
 except IOError:
     raise IOError("File '%s' not found!" %FILENAME)
